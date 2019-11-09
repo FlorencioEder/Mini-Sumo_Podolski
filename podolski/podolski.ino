@@ -1,161 +1,184 @@
+  
 bool direcao;
 
 void setup() {
-  pinMode(A0,INPUT);  //IRDireito
-  pinMode(A1,INPUT);  //IRMeio
-  pinMode(A2,INPUT);  //IREsquerdo
+  pinMode(A0,INPUT);  //LinhaDireito
+  pinMode(A1,INPUT);  //LinhaEsquerdo
+
+  pinMode(A2,INPUT);  //IRDireito
+  pinMode(A3,INPUT);  //IRMeio
+  pinMode(A4,INPUT);  //IREsquerdo
   
-  pinMode(A3,INPUT);  //LinhaDireito
-  pinMode(A4,INPUT);  //LinhaEsquerdo
-  
-  pinMode(11,OUTPUT); //pwmB
+  pinMode(11,OUTPUT); //pwmB -- motor esquerdo
   pinMode(10,OUTPUT); //Bin
   pinMode(9,OUTPUT);  //Bin
 
   pinMode(8,OUTPUT);  //STBY
+  digitalWrite(8,0);  //Seta o STBY para desativado
 
   pinMode(7,OUTPUT);  //Ain
   pinMode(6,OUTPUT);  //Ain
-  pinMode(5,OUTPUT);  //pwmA
+  pinMode(5,OUTPUT);  //pwmA -- motor direito
   
   //DIP Switch:
-//---------------------Ajustar qual laddo é 1 e qual lado e 0------------------------ 
-  pinMode(4,INPUT); //Direção de giro da busca-- 1 == XXX -- 0 == YYY
-//-----------------------------------------------------------------------------------
+  //---------------------Ajustar qual laddo é 1 e qual lado e 0------------------------ 
+  pinMode(4,INPUT); //Direção de giro da busca-- 1 == esquerda -- 0 == direita
   pinMode(3,INPUT); //Inicia retao quando 1
-  pinMode(2,INPUT);   //Inicia fazendo um drift 
-        //-----------IMPORTANTE-----------//
-        //--ajustar corretamento o switc--//
-        //----para a direção do drift-----//
-
+  pinMode(2,INPUT); //Inicia fazendo um drift
+  //-----------------------------------------------------------------------------------
+  
   pinMode(13,INPUT);  //Botao de start 
-
-  digitalWrite(8,0);  //Seta o STBY para desativado
 
   while(digitalRead(13)==1){} //Aguarda o botao onofre ser pressionado
 
   delay(5000);      //Aguarda os 5 segunndos 
   digitalWrite(8,1);    //Seta o STBY para ativado
 
-  if(digitalRead(4)==1){    //--------------------------//
-    direcao = true;     //-Seta para girar para XXX-//
-  }else{            //--------------------------//
-    direcao = false;    //-Seta para girar para YYY-//
-  }             //--------------------------//
-
-  if(digitalRead(3)==0){    
-                //--------------------------//
-    digitalWrite(10,0);   //--------------------------//
-    digitalWrite(9,1);    //--------------------------//
-    digitalWrite(7,0);    //----------COMEÇA----------//
-    digitalWrite(6,1);    //-------PARA FRENTE--------//
-    analogWrite(11,255);  //--------------------------//
-    analogWrite(5,255);   //--------------------------//
-    delay(500);       //--------------------------//
-
+  if(digitalRead(4)==1){
+    direcao = true;      //-Seta para girar para esquerda-//
+  }else{
+    direcao = false;    //-Seta para girar para direita-//
   }
+  /*ao longo da luta a variavel direcao é alterada 
+  dinamicamente para o robo sempre buscar
+  o adversario para o ultimo lado que ele o encontrou*/
 
-  else if(digitalRead(2)==0){
+  
+  if(digitalRead(3)==0){  //---------FRENTAO----------//
+    digitalWrite(10,0);
+    digitalWrite(9,1);
+    digitalWrite(7,0);
+    digitalWrite(6,1);
+    analogWrite(11,210); //---essa diferenca compensa a diferenca de 
+    analogWrite(5,255); //---potencia dos motores e desbalanceamento no robo
+    delay(750);
+  }
+  else if(digitalRead(2)==0){  //---------DRIFT---------//
 
-    if (direcao) {
+    //por algum motivo desconhecido temos que usar direção ao contrario aqui
+
+    if (direcao) {  //----------direita----------//
+
+      digitalWrite(10,0);
+      digitalWrite(9,1);
+      digitalWrite(7,0);
+      digitalWrite(6,1);
+      analogWrite(11,125);
+      analogWrite(5,255);
+      delay(1000);
+
+    }else{  //----------esquerda----------//
+
+      digitalWrite(10,0);
+      digitalWrite(9,1);
+      digitalWrite(7,0);
+      digitalWrite(6,1);
       analogWrite(11,255);
-      analogWrite(5,255);
-      digitalWrite(10,1);   //-----------------------//
-      digitalWrite(9,0);    //-----------------------//
-      digitalWrite(7,0);    //---------DRIFT---------//
-      digitalWrite(6,1);
-      delay(100);
-      digitalWrite(10,0);   //-----------------------//
-      digitalWrite(9,1);    //-----------------------//
-      digitalWrite(7,0);    //---------DRIFT---------//
-      digitalWrite(6,1);
-      analogWrite(11,255);  //----------yyy----------//
-      analogWrite(5,255);
-      delay(80);
-      analogWrite(11,255);  //----------yyy----------//
-      analogWrite(5,140);
-      delay(800);
-    }else{
-      analogWrite(11,255);
-      analogWrite(5,255);
-      digitalWrite(10,0);   //-----------------------//
-      digitalWrite(9,1);    //-----------------------//
-      digitalWrite(7,1);    //---------DRIFT---------//
-      digitalWrite(6,0);
-      delay(100);
-      digitalWrite(10,0);   //-----------------------//
-      digitalWrite(9,1);    //-----------------------//
-      digitalWrite(7,0);    //---------DRIFT---------//
-      digitalWrite(6,1);
-      analogWrite(11,255);  //----------yyy----------//
-      analogWrite(5,255);
-      delay(80);
-      analogWrite(11,150);  //----------yyy----------//
-      analogWrite(5,255);
-      delay(800);
+      analogWrite(5,170);
+      delay(900);
+
     }
-    direcao=!direcao;  
   }
 }
   
 void loop() {
-  while(analogRead(A0)>500 && analogRead(A1)>500){
+  while(analogRead(A0)>800 && analogRead(A1)>800){
 
-    if(analogRead(A3)>20){
+    if((analogRead(A3)>40) || ((analogRead(A3)>40) && (analogRead(A4)>40) && (analogRead(A2)>40))){
+    //--------Ataca totalmente para frente---------//
 
-      digitalWrite(10,0);   //-----------------------//
-      digitalWrite(9,1);    //-----------------------//
-      digitalWrite(7,0);    //--------Avança---------//
-      digitalWrite(6,1);    //--------Frente---------//
-      analogWrite(11,255);  //-----------------------//
-      analogWrite(5,255);   //-----------------------//
+      digitalWrite(10,0);
+      digitalWrite(9,1);
+      digitalWrite(7,0);
+      digitalWrite(6,1);
+      analogWrite(11,255);
+      analogWrite(5,255);
 
-    }else if(analogRead(A4)>20){
+    }else if((analogRead(A4)>25) && (analogRead(A3)>25)){
+    //--------Ataca ligeiramente para a esquerda---------//
 
-      digitalWrite(10,0);   //-----------------------//
-      digitalWrite(9,1);    //-----------------------//
-      digitalWrite(7,0);    //--------Avança---------//
-      digitalWrite(6,1);    //-------Esquerda--------//
-      analogWrite(11,250);  //-----------------------//
-      analogWrite(5,90);    //-----------------------//
+      digitalWrite(10,0);
+      digitalWrite(9,1);
+      digitalWrite(7,0);
+      digitalWrite(6,1);
+      analogWrite(11,215);
+      analogWrite(5,250);
+      direcao = false;
 
-    }else if(analogRead(A2)>20){
+    }else if((analogRead(A2)>25) && (analogRead(A3)>25)){
+    //--------Ataca ligeiramente para a direita---------//
 
-      digitalWrite(10,0);   //-----------------------//
-      digitalWrite(9,1);    //-----------------------//
-      digitalWrite(7,0);    //--------Avança---------//
-      digitalWrite(6,1);    //--------Direita--------//
-      analogWrite(11,90);   //-----------------------//
-      analogWrite(5,250);   //-----------------------//
+      digitalWrite(10,0);
+      digitalWrite(9,1);
+      digitalWrite(7,0);
+      digitalWrite(6,1);
+      analogWrite(11,250);
+      analogWrite(5,215);
+      direcao = true;
 
-    }else{
+    }else if(analogRead(A4)>25){
+    //--------Ataca para a esquerda---------//
 
-      if(direcao){
+      digitalWrite(10,0);
+      digitalWrite(9,1);
+      digitalWrite(7,0);
+      digitalWrite(6,1);
+      analogWrite(11,255);
+      analogWrite(5,75);
+      direcao = false;
 
-        digitalWrite(10,1); //-----------------------//
-        digitalWrite(9,0);  //-----------------------//
-        digitalWrite(7,0);  //--------Procura--------//
-        digitalWrite(6,1);  //----------XXX----------//
-        analogWrite(11,90); //-----------------------//
-        analogWrite(5,90);  //-----------------------//
+    }else if(analogRead(A2)>25){
+    //--------Ataca para a direita---------//
 
-      }else{
+      digitalWrite(10,0);
+      digitalWrite(9,1);
+      digitalWrite(7,0);
+      digitalWrite(6,1);
+      analogWrite(11,75);
+      analogWrite(5,255);
+      direcao = true;
 
-        digitalWrite(10,0); //-----------------------//
-        digitalWrite(9,1);  //-----------------------//
-        digitalWrite(7,1);  //--------Procura--------//
-        digitalWrite(6,0);  //----------YYY----------//
-        analogWrite(11,90); //-----------------------//
-        analogWrite(5,90);  //-----------------------//
+    }else{  //--------PROCURA ADVERSARIO--------//
+
+      if(direcao){  //--------esquerda--------//
+
+        digitalWrite(10,1);
+        digitalWrite(9,0);
+        digitalWrite(7,0);
+        digitalWrite(6,1);
+        analogWrite(11,100);
+        analogWrite(5,100);
+
+      }else{  //--------direita--------//
+
+        digitalWrite(10,0);
+        digitalWrite(9,1);
+        digitalWrite(7,1);
+        digitalWrite(6,0);
+        analogWrite(11,100);
+        analogWrite(5,100);
       }
     }
-  }   //se sair do while executa a rotina de linha
 
-  digitalWrite(10,1);   //-----------------------//
-  digitalWrite(9,0);    //-----------------------//
-  digitalWrite(7,1);    //---------Foge----------//
-  digitalWrite(6,0);    //----------da-----------//
-  analogWrite(11,200);  //--------Linha----------//
-  analogWrite(5,200);   //-----------------------//
-  delay(400);       //-----------------------//
+  }   //---------rotina de linha---------//
+
+  if (analogRead(A0)>800) {  //------Sensor da Direita------//
+
+    digitalWrite(10,1);
+    digitalWrite(9,0);
+    digitalWrite(7,1);
+    digitalWrite(6,0);
+    analogWrite(11,200);
+    analogWrite(5,125);
+    delay(400);
+  }
+  else if (analogRead(A1)>800) {  //------Sensor da Esquerda------//
+    digitalWrite(10,1);
+    digitalWrite(9,0);
+    digitalWrite(7,1);
+    digitalWrite(6,0);
+    analogWrite(11,125);
+    analogWrite(5,200);
+    delay(400);
+  }
 }
